@@ -23,7 +23,7 @@ class UsersController {
   
   async create(request, response) {
     const {name, phone, email} = request.body;
-
+    
     try {
       const id = await knex.from('user').insert({name, phone, email})[0];
       
@@ -39,6 +39,90 @@ class UsersController {
       })
     } catch (error) {
       return response.json({error: error.message})
+    }
+  }
+  
+  async update(request, response){
+    const { id } = request.params
+    const {name, phone, email} = request.body;
+    
+    try{
+      const [user] = await knex('users').select('*').where({
+        id
+      });
+      if(!user){
+        throw new Error('usuário não encontrado')
+      }
+      
+      const newUser = {
+
+        name: name || user.name,
+        phone: phone || user.phone,
+        email: email || user.email
+
+      }
+
+      await knex.from('users').where({
+        id
+      }).update({
+
+        name: newUser.name,
+        phone: newUser.phone,
+        email: newUser.email
+
+      });
+
+      return response.json({
+        message: "atualizado com sucesso"
+      });
+      
+    }catch(error){
+      return response.status(404).json({error: error.message})
+    }
+  }
+  
+  async show(request,response){
+    const { id } = request.params;
+    
+    try{
+      
+      const [user] = await knex('users').select('*').where({
+        id
+      });
+
+      if(!user){
+        throw new Error('usuário não encontrado');
+      }
+
+      return response.json(user);
+      
+    }catch(error){
+
+      return response.status(404).json({error: error.message});
+
+    }
+  }
+  async delete(request, response){
+    const { id } = request.params
+    
+    try{
+
+      const [user] = await knex('users').select('*').where({
+        id
+      });
+
+      if(!user){
+        throw new Error('usuário não encontrado')
+      }
+      
+      await knex.from('users').where({
+        id
+      }).del();
+      
+      return response.status(201).send('');
+      
+    }catch(error){
+      return response.status(404).json({error: error.message});
     }
   }
 }
